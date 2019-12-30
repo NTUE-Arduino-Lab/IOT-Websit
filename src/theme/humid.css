@@ -1,0 +1,13 @@
+.humid-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.humid-container .element-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-left: 2em;
+}
