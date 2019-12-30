@@ -11,7 +11,8 @@ class HumidChart extends Component {
     constructor(props) {
         super(props);
 
-        this.initCurrent = new Date('2019-12-30T23:02:00');
+        // this.initCurrent = new Date('2019-12-30T23:02:00');
+        this.initCurrent = new Date(Date.now());
         this.state = {
             options: {
                 dataLabels: {
@@ -77,7 +78,7 @@ class HumidChart extends Component {
         console.log(data);
 
         this.intervalId = setInterval(async () => {
-            // await this.handleFetchData();
+            await this.handleFetchData();
         }, 5000);
     }
 
@@ -111,8 +112,18 @@ class HumidChart extends Component {
                     currentMinute = currentMinute - 60;
                     currentMinute = this.checkAndAppendZero(currentMinute);
                 }
-
             }
+
+            // 下面還要加上跨日的檢查 ....
+
+            /** Date.now() 無法算到跨昨日 **/
+            // const dateNow = Date.now();
+            // const current = new Date(dateNow - 60000 * tolerance);
+            //
+            // currentHour = this.checkAndAppendZero(current.getHours());
+            // currentMinute = current.getMinutes();
+            // currentSecond = this.checkAndAppendZero(current.getSeconds());
+
         }
 
         const timeStamp = `2019-12-31T${currentHour}:${currentMinute}:${currentSecond}`;
@@ -151,7 +162,7 @@ class HumidChart extends Component {
         let currentHumidity;
 
         try {
-            response = await axios.get('http://192.168.0.106/');
+            response = await axios.get('http://192.168.0.108/');
             fetchedData = response.data.split(',');
             currentTemperature = fetchedData[0];
             currentHumidity = fetchedData[1];
