@@ -11,6 +11,7 @@ class HumidChart extends Component {
     constructor(props) {
         super(props);
 
+        this.initCurrent = new Date('2019-12-30T23:02:00');
         this.state = {
             options: {
                 dataLabels: {
@@ -20,14 +21,18 @@ class HumidChart extends Component {
                     curve: 'smooth'
                 },
 
-
                 xaxis: {
                     type: 'datetime',
-                    labels: {
-                        format: 'HH:mm',
-                    },
                     // categories: ["2019-12-31T21:31:05", "2019-12-31T21:31:10", "2019-12-31T21:31:15", "2019-12-31T21:31:20", "2019-12-31T21:31:25", "2019-12-31T21:31:30", "2019-12-31T21:31:35"],
-                    categories: [],
+                    categories: [
+                        this.getCurrentTime(this.initCurrent, 30),
+                        this.getCurrentTime(this.initCurrent, 25),
+                        this.getCurrentTime(this.initCurrent, 20),
+                        this.getCurrentTime(this.initCurrent, 15),
+                        this.getCurrentTime(this.initCurrent, 10),
+                        this.getCurrentTime(this.initCurrent, 5),
+                        this.getCurrentTime(this.initCurrent),
+                    ],
                 },
                 tooltip: {
                     x: {
@@ -38,14 +43,30 @@ class HumidChart extends Component {
             series: [{
                 name: '溫度',
                 // data: [31, 40, 28, 51, 42, 109, 100]
-                data: []
+                data: [
+                    this.getRandomTemperature(),
+                    this.getRandomTemperature(),
+                    this.getRandomTemperature(),
+                    this.getRandomTemperature(),
+                    this.getRandomTemperature(),
+                    this.getRandomTemperature(),
+                    this.getRandomTemperature(),
+                ]
             }, {
                 name: '濕度',
                 // data: [11, 32, 45, 32, 34, 52, 41]
-                data: []
+                data: [
+                    this.getRandomHumidity(),
+                    this.getRandomHumidity(),
+                    this.getRandomHumidity(),
+                    this.getRandomHumidity(),
+                    this.getRandomHumidity(),
+                    this.getRandomHumidity(),
+                    this.getRandomHumidity(),
+                ]
             }],
             currentTemperature: 0,
-            currentHumidity: 0
+            currentHumidity: 0,
         }
     }
 
@@ -56,7 +77,7 @@ class HumidChart extends Component {
         console.log(data);
 
         this.intervalId = setInterval(async () => {
-            await this.handleFetchData();
+            // await this.handleFetchData();
         }, 5000);
     }
 
@@ -64,30 +85,85 @@ class HumidChart extends Component {
         clearInterval(this.intervalId);
     }
 
-    async handleFetchData() {
+    getCurrentTime(initObj = null, tolerance = 0) {
 
-        const max = 90;
-        const min = 30;
+        let current = initObj;
 
-        const response = await axios.get('http://192.168.0.106/');
-        const fetchedData = response.data.split(',');
-        const currentTemperature = fetchedData[0];
-        const currentHumidity = fetchedData[1];
+        let currentHour;
+        let currentMinute;
+        let currentSecond;
 
+        if (initObj == null) {
+            current = new Date(Date.now());
+        }
+        currentHour = this.checkAndAppendZero(current.getHours());
+        currentMinute = current.getMinutes();
+        currentSecond = this.checkAndAppendZero(current.getSeconds());
 
-        const randomTemperature = Math.floor(Math.random() * (max - min + 1)) + min;
-        const randomHumidity = Math.floor(Math.random() * (180 - min + 1)) + min;
+        if(initObj !== null) {
+            if (currentMinute < 30) {
+                /** 初始化，少於 30 分 **/
+                currentHour = currentHour - 1;
+                currentMinute = currentMinute + 60 - tolerance;
 
+                if(currentMinute >= 60) {
+                    currentHour++;
+                    currentMinute = currentMinute - 60;
+                    currentMinute = this.checkAndAppendZero(currentMinute);
+                }
 
-        const current = new Date(Date.now());
-
-        const currentHour = current.getHours();
-        const currentMinute = current.getMinutes();
-        const currentSecond = current.getMinutes();
+            }
+        }
 
         const timeStamp = `2019-12-31T${currentHour}:${currentMinute}:${currentSecond}`;
 
-        console.log('making request...')
+        console.log(timeStamp);
+
+        return timeStamp;
+    }
+
+    checkAndAppendZero(input) {
+        if(input.toString().length === 1) {
+            input = `0${input}`;
+        }
+        return input;
+    }
+
+    getRandomTemperature() {
+        const max = 90;
+        const min = 30;
+        const randomTemperature = Math.floor(Math.random() * (max - min + 1)) + min;
+        return randomTemperature;
+    }
+
+    getRandomHumidity() {
+        const max = 90;
+        const min = 30;
+        const randomHumidity = Math.floor(Math.random() * (180 - min + 1)) + min;
+        return randomHumidity;
+    }
+
+    async handleFetchData() {
+
+        let response;
+        let fetchedData;
+        let currentTemperature;
+        let currentHumidity;
+
+        try {
+            response = await axios.get('http://192.168.0.106/');
+            fetchedData = response.data.split(',');
+            currentTemperature = fetchedData[0];
+            currentHumidity = fetchedData[1];
+        } catch (e) {
+            console.log('Internet error...');
+
+            currentTemperature = this.getRandomTemperature();
+            currentHumidity = this.getRandomHumidity();
+
+        }
+
+        const timeStamp = this.getCurrentTime();
 
         this.setState({
             options: {
@@ -110,14 +186,9 @@ class HumidChart extends Component {
             currentTemperature,
             currentHumidity
         })
-
-
     }
 
     render() {
-
-
-        // this.handleFetchData();
 
         return (
 
