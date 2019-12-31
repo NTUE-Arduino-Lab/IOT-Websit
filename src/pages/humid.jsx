@@ -72,10 +72,10 @@ class HumidChart extends Component {
     }
 
     async componentDidMount() {
-        const querySnapshot = await tempAndHumidityRef.orderBy('timeStamp', "asc").get();
+        // const querySnapshot = await tempAndHumidityRef.orderBy('timeStamp', "asc").get();
         // console.log(querySnapshot);
-        const data = querySnapshot.docs.map(doc => doc.data());
-        console.log(data);
+        // const data = querySnapshot.docs.map(doc => doc.data());
+        // console.log(data);
 
         this.intervalId = setInterval(async () => {
             await this.handleFetchData();
@@ -101,17 +101,21 @@ class HumidChart extends Component {
         currentMinute = current.getMinutes();
         currentSecond = this.checkAndAppendZero(current.getSeconds());
 
-        if(initObj !== null) {
+        if (initObj !== null) {
+
             if (currentMinute < 30) {
+
                 /** 初始化，少於 30 分 **/
                 currentHour = currentHour - 1;
                 currentMinute = currentMinute + 60 - tolerance;
 
-                if(currentMinute >= 60) {
+                if (currentMinute >= 60) {
                     currentHour++;
                     currentMinute = currentMinute - 60;
                     currentMinute = this.checkAndAppendZero(currentMinute);
                 }
+            } else {
+                currentMinute = currentMinute - tolerance;
             }
 
             // 下面還要加上跨日的檢查 ....
@@ -134,7 +138,7 @@ class HumidChart extends Component {
     }
 
     checkAndAppendZero(input) {
-        if(input.toString().length === 1) {
+        if (input.toString().length === 1) {
             input = `0${input}`;
         }
         return input;
